@@ -18,7 +18,7 @@ func BinarySearch(i []int, j int) int {
 	}
 	return 0
 }
-func Sleep(t time.Duration, s sync.WaitGroup) {
+func Sleep(t time.Duration, s *sync.WaitGroup) {
 	defer s.Done()
 	time.Sleep(t)
 }
