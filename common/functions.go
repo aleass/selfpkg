@@ -1,5 +1,10 @@
 package common
 
+import (
+	"sync"
+	"time"
+)
+
 //传入顺序切片值和查找数，返回index，不存在返回0
 func BinarySearch(i []int, j int) int {
 	res := i[len(i)/2]
@@ -13,6 +18,7 @@ func BinarySearch(i []int, j int) int {
 	}
 	return 0
 }
-func test() {
-
+func Sleep(t time.Duration, s sync.WaitGroup) {
+	defer s.Done()
+	time.Sleep(t)
 }
