@@ -12,9 +12,5 @@ func NewRdids(host string) (*redis.Client, error) {
 		Password: "",
 		DB:       0,
 	})
-	_, err := RedisServer.Ping().Result()
-	if err != nil {
-		return nil, err
-	}
 	return RedisServer, nil
 }
