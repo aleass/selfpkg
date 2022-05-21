@@ -54,6 +54,9 @@ func (t *TaskDownload) Run() bool {
 						t.error.Put(err)
 						//return
 					}
+				case <-t.ct.Done(): //当为false，可以及时停止任务。
+					t.error.Put(t.ct.Err())
+					return
 				}
 			}
 		}()
