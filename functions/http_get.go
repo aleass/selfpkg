@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 // get url 获取
@@ -17,16 +18,13 @@ type FileInfo struct {
 	buffer int
 }
 
-func GetUrl(urls, paths string, cancel context.Context) error {
-	//client := &http.Client{}
-	//req, err := http.NewRequest("get", urls, nil)
-	//req.Header.Add("Accept", `*/*`)
-	//req.Header.Add("Accept-Encoding", `identity`)
-	//req.Header.Add("Host", `d5.wzip.ru`)
-	//req.Header.Add("User-Agent", `Wget/1.21.3`)
+func GetUrl(urls, paths string, cancel context.Context, ot time.Duration) error {
+	client := &http.Client{}
+	client.Timeout = ot
+	req, err := http.NewRequest("GET", urls, nil)
 	//req.Header.Add("Connection", `Keep-Alive`)
-	//resp, err := client.Do(req)
-	resp, err := http.Get(urls)
+	resp, err := client.Do(req)
+	//resp, err := http.Get(urls)
 	if err != nil {
 		return err
 	}

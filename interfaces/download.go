@@ -2,8 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"fmt"
 	"selfpkg/functions"
 	"sync"
+	"time"
 )
 
 //任务下载对应实现接口
@@ -17,9 +19,10 @@ type TaskDownload struct {
 	Done     chan struct{}            //完成信号量
 	isAll    bool                     //是否一次性下载
 	error    SelfError                //错误信息
+	outTime  time.Duration            //超时
 }
 
-func NewTaskDl(max, multi int, isAll bool, filePath string) TaskInt {
+func NewTaskDl(max, multi int, isAll bool, filePath string, ot time.Duration) TaskInt {
 	ct, f := context.WithCancel(context.Background())
 	return &TaskDownload{
 		filePath: filePath,
@@ -30,6 +33,7 @@ func NewTaskDl(max, multi int, isAll bool, filePath string) TaskInt {
 		isAll:    isAll,
 		Done:     make(chan struct{}),
 		error:    SelfError{},
+		outTime:  ot,
 	}
 }
 
@@ -37,6 +41,9 @@ func (t *TaskDownload) Run() bool {
 	if t.tChan == nil {
 		panic("task chan is nil")
 	}
+	//if t.outTime > 0 {
+	//	t.SetOT()
+	//}
 	var w sync.WaitGroup
 	w.Add(int(t.multi))
 	for i := uint(0); i < t.multi; i++ {
@@ -49,11 +56,12 @@ func (t *TaskDownload) Run() bool {
 				}
 				select {
 				case u := <-t.tChan:
-					err := functions.GetUrl(u.Url, t.filePath+u.Name, t.ct)
+					err := functions.GetUrl(u.Url, t.filePath+u.Name, t.ct, t.outTime)
 					if err != nil {
 						t.error.Put(err)
 						//return
 					}
+					fmt.Println(fmt.Sprintf("not finish: %d", len(t.tChan)))
 				case <-t.ct.Done(): //当为false，可以及时停止任务。
 					t.error.Put(t.ct.Err())
 					return
@@ -101,4 +109,11 @@ func (t *TaskDownload) IsDone() error {
 		return nil
 	}
 	return t.error
+}
+
+func (t *TaskDownload) SetOT() {
+	if t.outTime <= 0 {
+		return
+	}
+	t.ct, t.fc = context.WithTimeout(t.ct, t.outTime)
 }
