@@ -5,24 +5,28 @@ import (
 	"time"
 )
 
+type timewheels struct {
+	Wheel [3][60]*taskList //second min hour
+}
 type taskList struct {
 	f     []func()
 	count int
 }
 
-type timeWheel [60]*taskList
-
-func NewTimeWheel() *timeWheel {
-	return &timeWheel{}
+func NewTimeWheel() *timewheels {
+	return &timewheels{}
 }
-func (t *timeWheel) Add(index int, fl []func()) {
-	t[index] = &taskList{f: fl}
+func (t *timewheels) Add(index int, fl []func(), types uint) {
+	if types >= 3 {
+		return
+	}
+	t.Wheel[types][index].f = append(t.Wheel[types][index].f, fl...)
 }
-func (t *timeWheel) Run() {
+func (t timewheels) Run() {
 	fmt.Println("start :", time.Now().Unix())
-	var index int
+	var sed, min, hour int
 	for true {
-		if cur := t[index]; cur != nil {
+		if cur := t.Wheel[0][sed]; cur != nil {
 			go func() {
 				for _, f := range cur.f {
 					f()
@@ -30,10 +34,16 @@ func (t *timeWheel) Run() {
 				cur.count++
 			}()
 		}
-		index++
-		if index == 59 {
-			index = 0
+
+		sed++
+		if sed == 59 {
+			min++
 		}
+
+		if min == 59 {
+			hour++
+		}
+
 		time.Sleep(time.Second)
 	}
 }
