@@ -1,4 +1,4 @@
-package main
+package functions
 
 import (
 	ants "github.com/panjf2000/ants/v2"

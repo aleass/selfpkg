@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
+
 	//"github.com/Terry-Mao/goim/pkg/encoding/binary"
 	"net"
 )
@@ -21,28 +23,37 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
-	var header = make([]byte, 32)
-	binary.BigEndian.PutUint32(header[_packOffset:], uint32(32))
+	var header = make([]byte, 16)
+
+	binary.BigEndian.PutUint32(header[_packOffset:], 38)
 	binary.BigEndian.PutUint16(header[_headerOffset:], uint16(16))
 	binary.BigEndian.PutUint16(header[6:8], uint16(169))
 	binary.BigEndian.PutUint32(header[8:12], uint32(7))
 	binary.BigEndian.PutUint32(header[12:16], uint32(999))
-
+	header = append(header, []byte("fjdskfjsafjdsfjlsdfjls")...)
 	_, err = conn.Write(header)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-
+	go func() {
+		for {
+			_, err = conn.Write(header)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+	var headers = make([]byte, 4096)
 	for {
-		num, err := conn.Read(header)
+		num, err := conn.Read(headers)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		binary.BigEndian.Uint32(header)
-		fmt.Println(string(header), num)
-
+		fmt.Println(string(headers), num)
 	}
 
 }
