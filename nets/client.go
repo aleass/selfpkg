@@ -9,14 +9,6 @@ import (
 	"net"
 )
 
-type s3 struct {
-}
-
-func (s s3) Read(p []byte) (n int, err error) {
-	p = []byte("1234567")
-	return len(p), nil
-}
-
 func main() {
 	conn, err := net.Dial("tcp", "127.0.0.1:3101")
 	if err != nil {

@@ -1,4 +1,2 @@
 .idea
-self
-main.go
-go.sum
+self/
