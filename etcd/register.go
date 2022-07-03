@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-func main() {
-	NewService()
-}
 
 //the detail of service 定义服务结构，唯一id加ip地址
 type ServiceInfo struct {
