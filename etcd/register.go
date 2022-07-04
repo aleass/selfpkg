@@ -4,8 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 	"time"
 )
 
@@ -16,11 +21,34 @@ type ServiceInfo struct {
 }
 
 type Service struct {
-	Name    string
-	Info    ServiceInfo
-	stop    chan error
-	leaseid clientv3.LeaseID
-	client  *clientv3.Client
+	Name       string
+	ServerPath string
+	Info       ServiceInfo
+	stop       chan error
+	leaseid    clientv3.LeaseID
+	client     *clientv3.Client
+}
+
+func main() {
+
+	go func() {
+		server, err := NewService("r1", ServiceInfo{
+			ID: 0,
+			IP: "127.0.0.1",
+		}, []string{"127.0.0.1:2379"})
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		server.Start()
+	}()
+	time.Sleep(time.Second * 2)
+	dis, err := NewMaster([]string{"127.0.0.1:2379"}, "r1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	dis.WatchNodes()
 }
 
 func NewService(name string, info ServiceInfo, endpoints []string) (*Service, error) {
@@ -35,10 +63,11 @@ func NewService(name string, info ServiceInfo, endpoints []string) (*Service, er
 	}
 
 	return &Service{
-		Name:   name,
-		Info:   info,
-		stop:   make(chan error),
-		client: cli,
+		Name:       name,
+		ServerPath: "services/",
+		Info:       info,
+		stop:       make(chan error),
+		client:     cli,
 	}, err
 }
 
@@ -48,22 +77,26 @@ func (s *Service) Start() error {
 		log.Fatal(err)
 		return err
 	}
-
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		select {
+		case err := <-c:
+			s.clear()
+			return errors.New(err.String())
 		case err := <-s.stop:
-			s.revoke()
+			s.clear()
 			return err
 		case <-s.client.Ctx().Done():
-			return errors.New("server closed")
+			return s.clear()
 		case ka, ok := <-ch:
 			if !ok {
 				log.Println("keep alive channel closed")
-				s.revoke()
+				s.clear()
 				return nil
-			} else {
-				log.Printf("Recv reply from service: %s, ttl:%d", s.Name, ka.TTL)
 			}
+			log.Printf("Recv reply from service: %s, ttl:%d", s.Name, ka.TTL)
+
 		}
 	}
 }
@@ -74,11 +107,11 @@ func (s *Service) Stop() {
 
 func (s *Service) keepAlive() (<-chan *clientv3.LeaseKeepAliveResponse, error) {
 	info := &s.Info
-	key := "services/" + s.Name
+	key := s.ServerPath + s.Name
 	value, _ := json.Marshal(info)
 
 	// minimum lease TTL is 5-second
-	resp, err := s.client.Grant(context.TODO(), 5)
+	resp, err := s.client.Grant(context.Background(), 30)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -94,11 +127,21 @@ func (s *Service) keepAlive() (<-chan *clientv3.LeaseKeepAliveResponse, error) {
 	return s.client.KeepAlive(context.TODO(), resp.ID)
 }
 
-func (s *Service) revoke() error {
+func (s *Service) clear() error {
 	_, err := s.client.Revoke(context.TODO(), s.leaseid)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("servide:%s stopn", s.Name)
+	fmt.Println("servide:" + strconv.Itoa(int(s.leaseid)) + "stop lease:")
+
+	_, err = s.client.Delete(context.TODO(), s.ServerPath, clientv3.WithPrefix())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("delete servide all ")
+
+	s.client.Close()
+	fmt.Println("season sto ")
 	return err
+
 }

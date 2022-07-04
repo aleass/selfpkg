@@ -10,9 +10,10 @@ import (
 )
 
 type Master struct {
-	Path   string
-	Nodes  map[string]*Node
-	Client *clientv3.Client
+	Path       string
+	ServerPath string
+	Nodes      map[string]*Node
+	Client     *clientv3.Client
 }
 
 //node is a client
@@ -34,15 +35,33 @@ func NewMaster(endpoints []string, watchPath string) (*Master, error) {
 	}
 
 	master := &Master{
-		Path:   watchPath,
-		Nodes:  make(map[string]*Node),
-		Client: cli,
+		Path:       watchPath,
+		ServerPath: "services/",
+		Nodes:      make(map[string]*Node),
+		Client:     cli,
 	}
-
+	master.AddAllServer()
 	go master.WatchNodes()
 	return master, err
 }
 
+func (m *Master) AddAllServer() {
+	res, err := m.Client.Get(context.TODO(), m.ServerPath, clientv3.WithPrefix())
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	for _, v := range res.Kvs {
+		info := &ServiceInfo{}
+		err := json.Unmarshal(v.Value, info)
+		if err != nil {
+			log.Fatal(err)
+			continue
+		}
+		m.AddNode(v.String(), info)
+	}
+
+}
 func (m *Master) AddNode(key string, info *ServiceInfo) {
 	node, ok := m.Nodes[key]
 	if !ok {
@@ -68,7 +87,7 @@ func (m *Master) DeleteNode(key string, info *ServiceInfo) {
 
 func GetServiceInfo(ev *clientv3.Event) *ServiceInfo {
 	info := &ServiceInfo{}
-	err := json.Unmarshal([]byte(ev.Kv.Value), info)
+	err := json.Unmarshal(ev.Kv.Value, info)
 	if err != nil {
 		log.Println(err)
 	}
