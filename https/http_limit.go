@@ -27,7 +27,7 @@ func httpLimit() {
 	//测试模仿途中修改限速
 	go func() {
 		time.Sleep(time.Second * 36)
-		atomic.StoreInt64(&limit,200 *kb)
+		atomic.StoreInt64(&limit, 200*kb)
 	}()
 	var now = t
 	for true {
