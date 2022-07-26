@@ -16,3 +16,11 @@ func demo1() {
 	fmt.Println(string(s))
 	fmt.Println(st)
 }
+func BenchmarkSlice() {
+	data := `hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbddddddddddddddddddddddddddddddddddddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccccccccc`
+	var bs = make([]byte, len(data))
+	copy(bs, data)
+
+	bs = make([]byte, len(data))
+	bs = []byte(data)
+}

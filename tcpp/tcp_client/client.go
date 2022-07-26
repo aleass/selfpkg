@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"selfpkg/nets"
 	//"github.com/Terry-Mao/goim/pkg/encoding/binary"
 	"net"
 )
