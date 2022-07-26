@@ -62,14 +62,14 @@ func main() {
 }
 
 func ReadTcp(conn *net.TCPConn) ([]byte, error) {
-	var header = make([]byte, nets.RawHeaderSize)
+	var header = make([]byte, tcpp.RawHeaderSize)
 	_, err := conn.Read(header)
 	if err != nil {
 		return nil, err
 	}
-	packSize := binary.BigEndian.Uint32(header[nets.HeaderOffset:])
+	packSize := binary.BigEndian.Uint32(header[tcpp.HeaderOffset:])
 	//ver := binary.BigEndian.Uint16(header[nets.VerOffset:])
-	dataSize := packSize - nets.RawHeaderSize
+	dataSize := packSize - tcpp.RawHeaderSize
 	if dataSize <= 0 {
 		return nil, errors.New("")
 
