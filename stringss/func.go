@@ -1,26 +1,33 @@
 package stringss
 
 import (
-	"fmt"
 	"unsafe"
 )
 
-func demo1() {
-	var s1 = [2]string{"{1, 2, 3, 4, 5, 6}", "{7, 8, 9}"}
-	var s = make([]byte, 27)             //申请长度的byte
-	st := *(*string)(unsafe.Pointer(&s)) //绑定同一个地址
-	for _, v := range s1 {
-		copy(s, v)
-		s = s[len(v):]
+func connectString(s []string) (str string) {
+	var l = len(s[0])
+	for i := 1; i < len(s); i++ {
+		l += len(s[i])
 	}
-	fmt.Println(string(s))
-	fmt.Println(st)
+	var bytes = make([]byte, l)              //申请长度的byte
+	str = *(*string)(unsafe.Pointer(&bytes)) //绑定同一个地址
+	var str2 string
+	for _, v := range s {
+		copy(bytes, v)
+		bytes = bytes[len(v):]
+		str2 += v
+	}
+	return
 }
-func BenchmarkSlice() {
-	data := `hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbddddddddddddddddddddddddddddddddddddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccccccccc`
-	var bs = make([]byte, len(data))
-	copy(bs, data)
 
-	bs = make([]byte, len(data))
-	bs = []byte(data)
+func string2sliceByte(data string) (bs []byte) {
+	var defaults = [32]byte{} //32以内
+	var l = len(data)
+	if l > 32 {
+		bs = make([]byte, len(data))
+	} else {
+		bs = defaults[:l]
+	}
+	copy(bs, data)
+	return
 }
