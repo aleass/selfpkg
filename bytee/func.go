@@ -15,7 +15,7 @@ func copyss() {
 	}
 }
 
-func delete(){
+func delete() {
 	var ids = []int{}
 	for i := 0; i < 10; i++ {
 		ids = append(ids, i)
@@ -31,7 +31,6 @@ func delete(){
 	}
 	fmt.Println(ids[:l])
 }
-
 
 // 显式id使用
 const (
