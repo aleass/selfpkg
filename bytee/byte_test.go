@@ -12,3 +12,19 @@ func FuzzGuids(f *testing.F) {
 		}
 	})
 }
+
+func BenchmarkAddUrl(b *testing.B) {
+	data := []byte(`["/aaaaa/bbbbb/20220718/cccc/.JPG", "/dddd/eee/20220718/eeeee.jpeg"]`)
+	b.Run("a", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			AddOssUrlFast(data, i)
+		}
+	})
+	b.Run("a3", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			AddOssUrlSlow(data)
+		}
+	})
+}

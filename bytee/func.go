@@ -1,6 +1,7 @@
 package bytee
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -62,4 +63,57 @@ func DecodeGuid(guid int64) int64 {
 func EncodeGuid2(id int64) int64 {
 	id = id << 32
 	return id + Byte32
+}
+
+/*
+oss + url
+*/
+
+var domain = []byte("https://stock-1309579221.file.myqcloud.com")
+var temp = [20][1024]byte{}
+
+func AddOssUrlSlow(data []byte) []byte {
+	var temp []string
+	json.Unmarshal(data, &temp)
+	var ss = make([]string, len(temp))
+	for i := 0; i < len(temp); i++ {
+		s := temp[i]
+		b := make([]byte, len(s)+len(domain))
+		n := copy(b, domain)
+		copy(b[n:], s)
+		ss[i] = string(b)
+	}
+	data, _ = json.Marshal(ss)
+	return data
+}
+
+func AddOssUrlFast(data []byte, num int) []byte {
+	if len(data) > 1024 {
+		return AddOssUrlSlow(data)
+	}
+	var ok bool
+	var l, n int
+	var bytess []byte
+	if num < 20 {
+		bytess = temp[num][:]
+	} else {
+		bytess = make([]byte, 1024)
+	}
+	for i, v := range data {
+		if v == '"' {
+			ok = true
+			continue
+		}
+		if v == '/' && ok {
+			n += copy(bytess[n:], data[l:i])
+			l = i
+			n += copy(bytess[n:], domain)
+		}
+		ok = false
+	}
+	n += copy(bytess[n:], data[l:])
+	if bytess[n-1] == 93 { //]  说明长度大于1024
+		return bytess[:n]
+	}
+	return AddOssUrlSlow(data)
 }
