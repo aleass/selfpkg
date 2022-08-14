@@ -1,24 +1,23 @@
 package main
 
 import (
-	"fmt"
-	"unsafe"
+	"net/http"
+	_ "net/http/pprof"
+	"strconv"
+	"time"
 )
 
-type info struct {
-	id    int
-	infos *info
-}
-
-func main() {
-	var s = info{
-		id:    123,
-		infos: &info{id: 233},
+func a() {
+	var s string
+	for i := 0; true; i++ {
+		s += strconv.Itoa(i)
+		time.Sleep(time.Second * 5)
 	}
-	var p = unsafe.Pointer(&s)
-	l := *(*int)(p) //获取长度
-	println(l)
-	infos := *(**uintptr)(unsafe.Add(p, 8))  //获取infos地址
-	index1 := *(*int)(unsafe.Pointer(infos)) //根据数据地址拿第一个数据
-	fmt.Println(index1)
+}
+func main() {
+	go func() {
+		http.ListenAndServe(":6060", nil)
+	}()
+	a()
+
 }
