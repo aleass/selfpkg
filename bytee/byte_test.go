@@ -1,6 +1,10 @@
 package bytee
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+	"unsafe"
+)
 
 // go test -fuzz FuzzGuids
 func FuzzGuids(f *testing.F) {
@@ -27,4 +31,24 @@ func BenchmarkAddUrl(b *testing.B) {
 			AddOssUrlSlow(data)
 		}
 	})
+}
+func BenchmarkLinkSlice(b *testing.B) {
+	var bb = []byte{1, 2, 3, 4, 5, 6, 2, 7, 8, 9}
+	b.Run("bb", func(b *testing.B) {
+		b.ReportAllocs()
+		sb := bytes.Buffer{}
+		for i := 0; i < b.N; i++ {
+			sb.Write(bb)
+		}
+	})
+
+	b.Run("aa", func(b *testing.B) {
+		b.ReportAllocs()
+		sb := bytes.Buffer{}
+		for i := 0; i < b.N; i++ {
+			var p = (*Buffer)(unsafe.Pointer(&sb))
+			(*p).buf = bb
+		}
+	})
+
 }

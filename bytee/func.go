@@ -1,9 +1,11 @@
 package bytee
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
+	"unsafe"
 )
 
 func copyss() {
@@ -116,4 +118,15 @@ func AddOssUrlFast(data []byte, num int) []byte {
 		return bytess[:n]
 	}
 	return AddOssUrlSlow(data)
+}
+
+type Buffer struct {
+	buf []byte // contents are the bytes buf[off : len(buf)]
+}
+
+func GetRWIO(b []byte) (buff *bytes.Buffer) {
+	buff = &bytes.Buffer{}
+	var p = (*Buffer)(unsafe.Pointer(&buff))
+	(*p).buf = b
+	return
 }
