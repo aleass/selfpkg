@@ -130,3 +130,23 @@ func GetRWIO(b []byte) (buff *bytes.Buffer) {
 	(*p).buf = b
 	return
 }
+
+//大小写转换
+// A-Z 1000001 1011010 97-122
+// a-z 1100001 1111010 65-90
+// 32  0100000
+// 95  1011111
+var letter = []rune{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+	'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+
+func main() {
+	for _, v := range letter {
+		fmt.Println(string(v), string(lower(v)), string(upper(v)))
+	}
+}
+func lower(ch rune) rune {
+	return 32 | ch
+}
+func upper(ch rune) rune {
+	return ch & 95
+}
