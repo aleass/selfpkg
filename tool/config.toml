@@ -1,0 +1,7 @@
+[app]
+host     = "192.168.11.60:3306"
+user     = "stock_user"
+pass     = "sfsctlrw92ijywi"
+database = "red_bill"
+pack     = "model"
+saveDir  = "D:\\code\\src\\app-api\\model\\"
